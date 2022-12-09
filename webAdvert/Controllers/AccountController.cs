@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Amazon.AspNetCore.Identity.Cognito;
 using Amazon.Extensions.CognitoAuthentication;
-using Amazon.Runtime.Internal.Transform;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using webAdvert.Models;
@@ -28,13 +27,6 @@ namespace webAdvert.Controllers
             _pool = pool;
 
         }
-        [HttpGet]
-        public async Task<string> Index()
-        {
-            return "Something went Wrong";
-
-        }
-
 
 
         // POST api/values
@@ -65,8 +57,10 @@ namespace webAdvert.Controllers
         [HttpPost("confirm")]
         public async Task<string> Confirm(ConfirmModel confirmModel)
         {
+           
 
             var user = await _userManager.FindByEmailAsync(confirmModel.Email);
+
 
             if (user.Status != null)
             {
@@ -100,6 +94,46 @@ namespace webAdvert.Controllers
 
 
         }
+
+
+        // POST api/values
+        [HttpGet("forgot")]
+        public async Task<string> ForgotPassword(string email)
+        {
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user.Status != null)
+            {
+               await user.ForgotPasswordAsync();
+                return "Code Sent Sucessfully";
+            }
+            return "User does not Exists";
+
+
+        }
+
+        // POST api/values
+        [HttpPost("forgot")]
+        public async Task<string> ForgotPassword(ResetModel forgotModel)
+        {
+
+            var user = await _userManager.FindByEmailAsync(forgotModel.Email);
+
+            if (user.Status != null)
+            {
+                var result = await (_userManager as CognitoUserManager<CognitoUser>).ResetPasswordAsync(user, forgotModel.Code,forgotModel.NewPassword).ConfigureAwait(false);
+
+                if (result.Succeeded)
+                {
+                    return "Password Reset Sucessfully";
+                }
+            }
+            return "User does not Exists";
+
+
+        }
+
 
     }
 }
